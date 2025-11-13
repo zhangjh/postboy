@@ -12,8 +12,6 @@ A lightweight cross-platform HTTP client for API testing, built with Electron an
 - 🚀 Fast and lightweight
 - 🎨 Modern, intuitive UI
 - 📁 Organize requests in collections
-- 🌍 Environment variables support
-- 📝 Request history
 - 💾 Local SQLite database
 - 🔄 Import/Export collections
 - 🖥️ Cross-platform (Windows & macOS)
@@ -85,10 +83,6 @@ postboy/
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please read the [Development Guide](./DEVELOPMENT.md) first.
 
 ## Support
 
