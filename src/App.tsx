@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MainLayout } from './components/Layout/MainLayout';
 import { Sidebar } from './components/Workspace/Sidebar';
+import { TitleBar } from './components/TitleBar/TitleBar';
 import { initService } from './services/initService';
 
 function App() {
@@ -50,14 +51,17 @@ function App() {
   }
 
   return (
-    <MainLayout sidebar={<Sidebar />}>
-      <div className="h-full flex items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">欢迎使用 Postboy</h2>
-          <p className="text-sm">选择或创建一个请求开始测试 API</p>
+    <>
+      <TitleBar />
+      <MainLayout sidebar={<Sidebar />}>
+        <div className="h-full flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-2">欢迎使用 PostBoy</h2>
+            <p className="text-sm">选择或创建一个请求开始测试 API</p>
+          </div>
         </div>
-      </div>
-    </MainLayout>
+      </MainLayout>
+    </>
   );
 }
 

@@ -43,20 +43,15 @@ export function Header() {
 
   return (
     <>
-      <div className="h-12 border-b flex items-center px-4 gap-2">
-        <div className="flex items-center gap-2 flex-1">
-          <h1 className="text-lg font-semibold">Postboy</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4" />
-            导出配置
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)}>
-            <Upload className="h-4 w-4" />
-            导入配置
-          </Button>
-        </div>
+      <div className="h-12 border-b flex items-center justify-end px-4 gap-2">
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4" />
+          导出配置
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)}>
+          <Upload className="h-4 w-4" />
+          导入配置
+        </Button>
       </div>
 
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>

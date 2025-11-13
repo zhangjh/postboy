@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDatabase, closeDatabase } from './database/connection.js';
@@ -45,12 +45,35 @@ function createWindow() {
   });
 }
 
+function registerWindowControls() {
+  ipcMain.on('window-control', (_event, action: 'minimize' | 'maximize' | 'close') => {
+    if (!mainWindow) return;
+
+    switch (action) {
+      case 'minimize':
+        mainWindow.minimize();
+        break;
+      case 'maximize':
+        if (mainWindow.isMaximized()) {
+          mainWindow.unmaximize();
+        } else {
+          mainWindow.maximize();
+        }
+        break;
+      case 'close':
+        mainWindow.close();
+        break;
+    }
+  });
+}
+
 function initializeApp() {
   try {
     initDatabase();
     registerDatabaseHandlers();
     registerHttpHandlers();
     registerFileHandlers();
+    registerWindowControls();
   } catch (error) {
     console.error('Failed to initialize application:', error);
     app.quit();
