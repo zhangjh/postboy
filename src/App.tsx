@@ -1,0 +1,64 @@
+import { useEffect, useState } from 'react';
+import { MainLayout } from './components/Layout/MainLayout';
+import { Sidebar } from './components/Workspace/Sidebar';
+import { initService } from './services/initService';
+
+function App() {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await initService.initializeApp();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Initialization error:', error);
+        setInitError(error instanceof Error ? error.message : 'Failed to initialize application');
+      }
+    };
+
+    initialize();
+  }, []);
+
+  if (initError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center p-8 max-w-md">
+          <h2 className="text-2xl font-semibold mb-4 text-destructive">初始化失败</h2>
+          <p className="text-sm text-muted-foreground mb-4">{initError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            重新加载
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isInitialized) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">正在加载...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <MainLayout sidebar={<Sidebar />}>
+      <div className="h-full flex items-center justify-center text-muted-foreground">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">欢迎使用 Postboy</h2>
+          <p className="text-sm">选择或创建一个请求开始测试 API</p>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
+export default App;
