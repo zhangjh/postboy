@@ -13,6 +13,7 @@ interface WorkspaceState {
   loadWorkspaces: () => Promise<void>;
   selectWorkspace: (workspaceId: number) => Promise<void>;
   createWorkspace: (name: string) => Promise<Workspace>;
+  updateWorkspace: (workspaceId: number, name: string) => Promise<void>;
   deleteWorkspace: (workspaceId: number) => Promise<void>;
   
   createGroup: (workspaceId: number, name: string) => Promise<RequestGroup>;
@@ -76,6 +77,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       return workspace;
     } catch (error) {
       errorService.handleError(error, '创建工作区');
+      throw error;
+    }
+  },
+
+  updateWorkspace: async (workspaceId: number, name: string) => {
+    try {
+      await ipcService.updateWorkspace(workspaceId, name);
+      set((state) => ({
+        workspaces: state.workspaces.map((w) => (w.id === workspaceId ? { ...w, name } : w)),
+      }));
+      errorService.showSuccess('更新成功', '工作区名称已更新');
+    } catch (error) {
+      errorService.handleError(error, '更新工作区');
       throw error;
     }
   },

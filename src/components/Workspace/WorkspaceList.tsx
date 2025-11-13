@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,12 +15,15 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function WorkspaceList() {
-  const { workspaces, currentWorkspaceId, selectWorkspace, createWorkspace, deleteWorkspace } = useWorkspaceStore();
+  const { workspaces, currentWorkspaceId, selectWorkspace, createWorkspace, updateWorkspace, deleteWorkspace } = useWorkspaceStore();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [workspaceName, setWorkspaceName] = useState('');
+  const [renameWorkspaceId, setRenameWorkspaceId] = useState<number | null>(null);
   const [deleteWorkspaceId, setDeleteWorkspaceId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleCreate = async () => {
@@ -35,6 +38,29 @@ export function WorkspaceList() {
       console.error('Failed to create workspace:', error);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleRenameClick = (id: number, currentName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRenameWorkspaceId(id);
+    setWorkspaceName(currentName);
+    setShowRenameDialog(true);
+  };
+
+  const handleRenameConfirm = async () => {
+    if (renameWorkspaceId === null || !workspaceName.trim()) return;
+    
+    setRenaming(true);
+    try {
+      await updateWorkspace(renameWorkspaceId, workspaceName.trim());
+      setShowRenameDialog(false);
+      setRenameWorkspaceId(null);
+      setWorkspaceName('');
+    } catch (error) {
+      console.error('Failed to rename workspace:', error);
+    } finally {
+      setRenaming(false);
     }
   };
 
@@ -82,14 +108,24 @@ export function WorkspaceList() {
                 onClick={() => selectWorkspace(workspace.id)}
               >
                 <span className="text-sm truncate flex-1">{workspace.name}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                  onClick={(e) => handleDeleteClick(workspace.id, e)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => handleRenameClick(workspace.id, workspace.name, e)}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => handleDeleteClick(workspace.id, e)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -118,6 +154,33 @@ export function WorkspaceList() {
             </Button>
             <Button onClick={handleCreate} disabled={creating || !workspaceName.trim()}>
               {creating ? '创建中...' : '创建'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>重命名工作空间</DialogTitle>
+            <DialogDescription>为工作空间输入新的名称</DialogDescription>
+          </DialogHeader>
+          <Input
+            placeholder="工作空间名称"
+            value={workspaceName}
+            onChange={(e) => setWorkspaceName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleRenameConfirm();
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameDialog(false)} disabled={renaming}>
+              取消
+            </Button>
+            <Button onClick={handleRenameConfirm} disabled={renaming || !workspaceName.trim()}>
+              {renaming ? '更新中...' : '更新'}
             </Button>
           </DialogFooter>
         </DialogContent>
