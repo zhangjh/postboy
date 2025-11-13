@@ -49,18 +49,6 @@ export interface ParsedCurl {
   body?: string;
 }
 
-function unescapeString(str: string): string {
-  return str
-    .replace(/\\n/g, '\n')
-    .replace(/\\r/g, '\r')
-    .replace(/\\t/g, '\t')
-    .replace(/\\"/g, '"')
-    .replace(/\\'/g, "'")
-    .replace(/\\\$/g, '$')
-    .replace(/\\`/g, '`')
-    .replace(/\\\\/g, '\\');
-}
-
 function extractQuotedString(text: string, startIndex: number): { value: string; endIndex: number } | null {
   const char = text[startIndex];
   
@@ -75,24 +63,35 @@ function extractQuotedString(text: string, startIndex: number): { value: string;
   const quote = char;
   let value = '';
   let i = startIndex + 1;
-  let escaped = false;
 
   while (i < text.length) {
     const c = text[i];
     
-    if (escaped) {
+    if (quote === "'" && c === "'") {
+      if (i + 3 < text.length && text.substring(i, i + 4) === "'\\''") {
+        value += "'";
+        i += 4;
+        continue;
+      }
+      return { value, endIndex: i + 1 };
+    } else if (quote === '"' && c === '\\' && i + 1 < text.length) {
+      const nextChar = text[i + 1];
+      if (nextChar === '"' || nextChar === '\\' || nextChar === 'n' || nextChar === 't' || nextChar === 'r') {
+        if (nextChar === 'n') value += '\n';
+        else if (nextChar === 't') value += '\t';
+        else if (nextChar === 'r') value += '\r';
+        else value += nextChar;
+        i += 2;
+        continue;
+      }
       value += c;
-      escaped = false;
-    } else if (c === '\\') {
-      value += c;
-      escaped = true;
-    } else if (c === quote) {
-      return { value: unescapeString(value), endIndex: i + 1 };
+      i++;
+    } else if (quote === '"' && c === '"') {
+      return { value, endIndex: i + 1 };
     } else {
       value += c;
+      i++;
     }
-    
-    i++;
   }
 
   throw new Error(`Unclosed quote in cURL command`);
@@ -105,7 +104,11 @@ export function parseCurl(curlCommand: string): ParsedCurl {
     headers: {},
   };
 
-  let command = curlCommand.trim().replace(/\\\n/g, ' ').replace(/\s+/g, ' ');
+  let command = curlCommand
+    .trim()
+    .replace(/\\\r?\n/g, ' ')
+    .replace(/\\\s+/g, ' ')
+    .replace(/\s+/g, ' ');
   
   if (!command.startsWith('curl')) {
     throw new Error('Invalid cURL command: must start with "curl"');

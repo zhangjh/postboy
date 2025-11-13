@@ -8,6 +8,7 @@ import { BodyEditor } from './BodyEditor';
 import { RequestActions } from './RequestActions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
+import { toast } from 'sonner';
 import type { HttpMethod, RequestConfig } from '../../types';
 
 const METHODS_WITH_BODY: HttpMethod[] = ['POST', 'PUT', 'DELETE'];
@@ -40,14 +41,25 @@ export function RequestEditor() {
   };
 
   const handleSave = async () => {
-    if (!currentRequest.groupId) {
-      const firstGroup = groups[0];
-      if (!firstGroup) {
+    try {
+      const isNewRequest = !currentRequest.id;
+      const targetGroupId = currentRequest.groupId || groups[0]?.id;
+      
+      if (!targetGroupId) {
+        toast.error('请先创建一个分组');
         return;
       }
-      await saveRequest(firstGroup.id);
-    } else {
-      await saveRequest(currentRequest.groupId);
+
+      await saveRequest(targetGroupId);
+      
+      if (currentWorkspaceId) {
+        await useWorkspaceStore.getState().selectWorkspace(currentWorkspaceId);
+      }
+      
+      toast.success(isNewRequest ? '请求已创建' : '请求已保存');
+    } catch (error) {
+      toast.error('保存失败');
+      console.error('Failed to save request:', error);
     }
   };
 

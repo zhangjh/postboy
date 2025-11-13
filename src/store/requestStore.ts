@@ -152,6 +152,8 @@ export const useRequestStore = create<RequestState>((set, get) => ({
           },
         }));
       }
+      
+      return Promise.resolve();
     } catch (error) {
       console.error('Failed to save request:', error);
       throw error;

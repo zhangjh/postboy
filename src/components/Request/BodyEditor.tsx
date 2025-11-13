@@ -83,7 +83,7 @@ export function BodyEditor({ body, bodyType, onBodyChange, onBodyTypeChange }: B
           language={BODY_TYPE_LANGUAGE_MAP[bodyType]}
           value={body}
           onChange={(value) => onBodyChange(value || '')}
-          theme="vs-dark"
+          theme="vs"
           options={{
             minimap: { enabled: false },
             fontSize: 13,
