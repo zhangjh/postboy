@@ -39,7 +39,9 @@ export function WorkspaceTree() {
       request.url,
       request.headers,
       request.body,
-      request.bodyType
+      request.bodyMode,
+      request.rawType,
+      request.formData
     );
   };
 

@@ -3,6 +3,13 @@ import { ipcService } from '../services/ipcService';
 import { initService } from '../services/initService';
 import type { HttpMethod } from '../types';
 
+interface FormDataItem {
+  key: string;
+  value: string;
+  type: 'text' | 'file';
+  enabled: boolean;
+}
+
 interface CurrentRequest {
   id?: number;
   groupId?: number;
@@ -11,7 +18,9 @@ interface CurrentRequest {
   url: string;
   headers: Record<string, string>;
   body?: string;
-  bodyType?: 'text' | 'json' | 'xml';
+  bodyMode?: 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw';
+  rawType?: 'text' | 'json' | 'xml' | 'html' | 'javascript';
+  formData?: FormDataItem[];
 }
 
 interface RequestState {
@@ -23,9 +32,11 @@ interface RequestState {
   updateHeader: (oldKey: string, newKey: string, value: string) => void;
   deleteHeader: (key: string) => void;
   setBody: (body: string) => void;
-  setBodyType: (bodyType: 'text' | 'json' | 'xml') => void;
+  setBodyMode: (mode: 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw') => void;
+  setRawType: (type: 'text' | 'json' | 'xml' | 'html' | 'javascript') => void;
+  setFormData: (formData: FormDataItem[]) => void;
   saveRequest: (groupId: number) => Promise<void>;
-  loadRequest: (requestId: number, groupId: number, name: string, method: HttpMethod, url: string, headers: Record<string, string>, body?: string, bodyType?: 'text' | 'json' | 'xml') => void;
+  loadRequest: (requestId: number, groupId: number, name: string, method: HttpMethod, url: string, headers: Record<string, string>, body?: string, bodyMode?: 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw', rawType?: 'text' | 'json' | 'xml' | 'html' | 'javascript', formData?: FormDataItem[]) => void;
   resetRequest: () => void;
 }
 
@@ -35,7 +46,9 @@ const initialRequest: CurrentRequest = {
   url: '',
   headers: {},
   body: '',
-  bodyType: 'text',
+  bodyMode: 'none',
+  rawType: 'text',
+  formData: [],
 };
 
 export const useRequestStore = create<RequestState>((set, get) => ({
@@ -111,11 +124,29 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     }));
   },
 
-  setBodyType: (bodyType: 'text' | 'json' | 'xml') => {
+  setBodyMode: (bodyMode: 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw') => {
     set((state) => ({
       currentRequest: {
         ...state.currentRequest,
-        bodyType,
+        bodyMode,
+      },
+    }));
+  },
+
+  setRawType: (rawType: 'text' | 'json' | 'xml' | 'html' | 'javascript') => {
+    set((state) => ({
+      currentRequest: {
+        ...state.currentRequest,
+        rawType,
+      },
+    }));
+  },
+
+  setFormData: (formData: FormDataItem[]) => {
+    set((state) => ({
+      currentRequest: {
+        ...state.currentRequest,
+        formData,
       },
     }));
   },
@@ -131,7 +162,9 @@ export const useRequestStore = create<RequestState>((set, get) => ({
           url: currentRequest.url,
           headers: currentRequest.headers,
           body: currentRequest.body,
-          bodyType: currentRequest.bodyType,
+          bodyMode: currentRequest.bodyMode,
+          rawType: currentRequest.rawType,
+          formData: currentRequest.formData,
         });
       } else {
         const newRequest = await ipcService.createRequest({
@@ -141,7 +174,9 @@ export const useRequestStore = create<RequestState>((set, get) => ({
           url: currentRequest.url,
           headers: currentRequest.headers,
           body: currentRequest.body,
-          bodyType: currentRequest.bodyType,
+          bodyMode: currentRequest.bodyMode,
+          rawType: currentRequest.rawType,
+          formData: currentRequest.formData,
         });
         
         set((state) => ({
@@ -168,7 +203,9 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     url: string,
     headers: Record<string, string>,
     body?: string,
-    bodyType?: 'text' | 'json' | 'xml'
+    bodyMode?: 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw',
+    rawType?: 'text' | 'json' | 'xml' | 'html' | 'javascript',
+    formData?: FormDataItem[]
   ) => {
     set({
       currentRequest: {
@@ -179,7 +216,9 @@ export const useRequestStore = create<RequestState>((set, get) => ({
         url,
         headers,
         body,
-        bodyType,
+        bodyMode: bodyMode || 'none',
+        rawType: rawType || 'text',
+        formData: formData || [],
       },
     });
     

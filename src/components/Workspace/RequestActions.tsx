@@ -74,7 +74,9 @@ export function RequestActions({ request }: RequestActionsProps) {
         url: request.url,
         headers: request.headers,
         body: request.body,
-        bodyType: request.bodyType,
+        bodyMode: request.bodyMode,
+        rawType: request.rawType,
+        formData: request.formData,
       });
 
       loadRequest(
@@ -85,7 +87,9 @@ export function RequestActions({ request }: RequestActionsProps) {
         duplicatedRequest.url,
         duplicatedRequest.headers,
         duplicatedRequest.body,
-        duplicatedRequest.bodyType
+        duplicatedRequest.bodyMode,
+        duplicatedRequest.rawType,
+        duplicatedRequest.formData
       );
 
       toast.success('复制成功');

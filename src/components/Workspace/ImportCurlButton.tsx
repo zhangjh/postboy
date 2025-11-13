@@ -42,7 +42,8 @@ export function ImportCurlButton({ groupId }: ImportCurlButtonProps) {
         url: parsed.url,
         headers: parsed.headers,
         body: parsed.body,
-        bodyType: parsed.body ? 'text' : undefined,
+        bodyMode: parsed.body ? 'raw' : 'none',
+        rawType: 'text',
       });
 
       loadRequest(
@@ -53,7 +54,9 @@ export function ImportCurlButton({ groupId }: ImportCurlButtonProps) {
         newRequest.url,
         newRequest.headers,
         newRequest.body,
-        newRequest.bodyType
+        newRequest.bodyMode,
+        newRequest.rawType,
+        newRequest.formData
       );
 
       toast.success('cURL 命令导入成功');

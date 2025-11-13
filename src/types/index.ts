@@ -24,7 +24,14 @@ export interface RequestItem {
   url: string;
   headers: Record<string, string>;
   body?: string;
-  bodyType?: 'text' | 'json' | 'xml';
+  bodyMode?: 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw';
+  rawType?: 'text' | 'json' | 'xml' | 'html' | 'javascript';
+  formData?: Array<{ 
+    key: string; 
+    value: string; 
+    type: 'text' | 'file';
+    enabled: boolean;
+  }>;
   sortOrder: number;
   createdAt: number;
   updatedAt: number;
