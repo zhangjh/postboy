@@ -14,6 +14,7 @@ interface ImportCurlButtonProps {
 export function ImportCurlButton({ groupId }: ImportCurlButtonProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [curlInput, setCurlInput] = useState('');
+  const [requestName, setRequestName] = useState('');
   const [importing, setImporting] = useState(false);
   const { createRequest } = useWorkspaceStore();
   const { loadRequest } = useRequestStore();
@@ -33,8 +34,10 @@ export function ImportCurlButton({ groupId }: ImportCurlButtonProps) {
         return;
       }
 
+      const defaultName = `导入的请求 - ${parsed.method} ${new URL(parsed.url).pathname}`;
+      
       const newRequest = await createRequest(groupId, {
-        name: `导入的请求 - ${parsed.method} ${new URL(parsed.url).pathname}`,
+        name: requestName.trim() || defaultName,
         method: parsed.method,
         url: parsed.url,
         headers: parsed.headers,
@@ -56,6 +59,7 @@ export function ImportCurlButton({ groupId }: ImportCurlButtonProps) {
       toast.success('cURL 命令导入成功');
       setShowDialog(false);
       setCurlInput('');
+      setRequestName('');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '解析 cURL 命令失败';
       toast.error(errorMessage);
@@ -84,22 +88,42 @@ export function ImportCurlButton({ groupId }: ImportCurlButtonProps) {
               粘贴 cURL 命令以导入请求配置，将自动创建一个新的请求
             </DialogDescription>
           </DialogHeader>
-          <div className="my-4 space-y-2">
-            <textarea
-              value={curlInput}
-              onChange={(e) => setCurlInput(e.target.value)}
-              placeholder="curl -X POST https://api.example.com -H 'Content-Type: application/json' -d '{...}'"
-              className="w-full min-h-[120px] p-3 font-mono text-sm border rounded-md resize-y"
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground">
-              支持的格式：-X/--request, -H/--header, -d/--data/--data-raw
-            </p>
+          <div className="my-4 space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="request-name" className="text-sm font-medium">
+                请求名称（可选）
+              </label>
+              <input
+                id="request-name"
+                type="text"
+                value={requestName}
+                onChange={(e) => setRequestName(e.target.value)}
+                placeholder="留空将自动生成名称"
+                className="w-full p-2 text-sm border rounded-md"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="curl-input" className="text-sm font-medium">
+                cURL 命令
+              </label>
+              <textarea
+                id="curl-input"
+                value={curlInput}
+                onChange={(e) => setCurlInput(e.target.value)}
+                placeholder="curl -X POST https://api.example.com -H 'Content-Type: application/json' -d '{...}'"
+                className="w-full min-h-[120px] p-3 font-mono text-sm border rounded-md resize-y"
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                支持的格式：-X/--request, -H/--header, -d/--data/--data-raw
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
               setShowDialog(false);
               setCurlInput('');
+              setRequestName('');
             }} disabled={importing}>
               取消
             </Button>
