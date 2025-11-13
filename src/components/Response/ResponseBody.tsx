@@ -119,7 +119,7 @@ export function ResponseBody({ data, contentType }: ResponseBodyProps) {
               lineNumbers: 'on',
               wordWrap: 'on',
             }}
-            theme="vs"
+            theme="vs-light"
           />
         ) : (
           <ScrollArea className="flex-1">
@@ -149,7 +149,7 @@ export function ResponseBody({ data, contentType }: ResponseBodyProps) {
         lineNumbers: 'on',
         wordWrap: 'on',
       }}
-      theme="vs"
+      theme="vs-light"
     />
   );
 }
