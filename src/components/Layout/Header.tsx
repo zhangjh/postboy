@@ -1,6 +1,6 @@
-import { Download, Upload } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useRequestStore } from '@/store/requestStore';
 import {
   Dialog,
   DialogContent,
@@ -11,63 +11,74 @@ import {
 } from '@/components/ui/dialog';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { generateCurl } from '@/services/curlService';
 
 export function Header() {
-  const { exportConfig, importConfig } = useWorkspaceStore();
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const { currentRequest } = useRequestStore();
+  const [showExportCurlDialog, setShowExportCurlDialog] = useState(false);
+  const [curlCommand, setCurlCommand] = useState('');
 
-  const handleExport = async () => {
+  const hasActiveRequest = !!currentRequest.url;
+
+  const handleExportCurl = () => {
     try {
-      await exportConfig();
-      toast.success('配置导出成功');
+      const platform = window.navigator.platform.toLowerCase().includes('win') ? 'win32' : 
+                      window.navigator.platform.toLowerCase().includes('mac') ? 'darwin' : 'linux';
+      const curl = generateCurl({
+        method: currentRequest.method,
+        url: currentRequest.url,
+        headers: currentRequest.headers,
+        body: currentRequest.body,
+      }, platform as 'win32' | 'darwin' | 'linux');
+      setCurlCommand(curl);
+      setShowExportCurlDialog(true);
     } catch (error) {
-      console.error('Export failed:', error);
-      toast.error('配置导出失败');
+      const errorMessage = error instanceof Error ? error.message : '生成 cURL 命令失败';
+      toast.error(errorMessage);
     }
   };
 
-  const handleImportConfirm = async () => {
-    setImporting(true);
+  const handleCopyCurl = async () => {
     try {
-      await importConfig();
-      setShowImportDialog(false);
-      toast.success('配置导入成功');
+      await navigator.clipboard.writeText(curlCommand);
+      toast.success('cURL 命令已复制到剪贴板');
+      setShowExportCurlDialog(false);
     } catch (error) {
-      console.error('Import failed:', error);
-      toast.error('配置导入失败');
-    } finally {
-      setImporting(false);
+      toast.error('复制到剪贴板失败');
     }
   };
 
   return (
     <>
       <div className="h-12 border-b flex items-center justify-end px-4 gap-2">
-        <Button variant="outline" size="sm" onClick={handleExport}>
+        <Button variant="outline" size="sm" onClick={handleExportCurl} disabled={!hasActiveRequest}>
           <Download className="h-4 w-4" />
-          导出配置
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)}>
-          <Upload className="h-4 w-4" />
-          导入配置
+          导出 cURL
         </Button>
       </div>
 
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent>
+      <Dialog open={showExportCurlDialog} onOpenChange={setShowExportCurlDialog}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>导入配置</DialogTitle>
+            <DialogTitle>导出为 cURL 命令</DialogTitle>
             <DialogDescription>
-              导入配置将会覆盖所有现有数据，包括所有 Workspace、Request Group 和 Request Item。此操作不可撤销。
+              复制下方的 cURL 命令以在终端或其他工具中使用
             </DialogDescription>
           </DialogHeader>
+          <div className="my-4">
+            <textarea
+              value={curlCommand}
+              readOnly
+              className="w-full min-h-[120px] p-3 font-mono text-sm border rounded-md resize-y bg-muted"
+              onClick={(e) => e.currentTarget.select()}
+            />
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImportDialog(false)} disabled={importing}>
-              取消
+            <Button variant="outline" onClick={() => setShowExportCurlDialog(false)}>
+              关闭
             </Button>
-            <Button variant="destructive" onClick={handleImportConfirm} disabled={importing}>
-              {importing ? '导入中...' : '确认导入'}
+            <Button onClick={handleCopyCurl}>
+              复制到剪贴板
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -51,19 +51,6 @@ export function RequestEditor() {
     }
   };
 
-  const handleImportCurl = (config: RequestConfig) => {
-    setMethod(config.method);
-    setUrl(config.url);
-    
-    useRequestStore.setState((state) => ({
-      currentRequest: {
-        ...state.currentRequest,
-        headers: config.headers,
-        body: config.body,
-      },
-    }));
-  };
-
   const canSave = !!currentWorkspaceId && groups.length > 0;
 
   return (
@@ -85,7 +72,6 @@ export function RequestEditor() {
           }}
           onSend={handleSend}
           onSave={handleSave}
-          onImportCurl={handleImportCurl}
         />
       </div>
 

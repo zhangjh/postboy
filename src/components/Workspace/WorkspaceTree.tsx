@@ -9,6 +9,7 @@ import { GroupActions } from './GroupActions';
 import { RequestActions } from './RequestActions';
 import { CreateGroupButton } from './CreateGroupButton';
 import { CreateRequestButton } from './CreateRequestButton';
+import { ImportCurlButton } from './ImportCurlButton';
 
 export function WorkspaceTree() {
   const { groups, requests, currentWorkspaceId } = useWorkspaceStore();
@@ -119,6 +120,7 @@ export function WorkspaceTree() {
                 {isExpanded && (
                   <div className="ml-6 mt-1 space-y-0.5">
                     <CreateRequestButton groupId={group.id} />
+                    <ImportCurlButton groupId={group.id} />
                     {groupRequests.length === 0 ? (
                       <div className="px-2 py-1.5 text-xs text-muted-foreground">暂无请求</div>
                     ) : (

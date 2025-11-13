@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { MainLayout } from './components/Layout/MainLayout';
 import { Sidebar } from './components/Workspace/Sidebar';
 import { TitleBar } from './components/TitleBar/TitleBar';
+import { RequestEditor } from './components/Request/RequestEditor';
+import { ResponseViewer } from './components/Response/ResponseViewer';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './components/ui/resizable';
+import { useRequestStore } from './store/requestStore';
+import { useResponseStore } from './store/responseStore';
 import { initService } from './services/initService';
 
 function App() {
@@ -51,17 +56,42 @@ function App() {
   }
 
   return (
-    <>
+    <div className="h-screen flex flex-col">
       <TitleBar />
-      <MainLayout sidebar={<Sidebar />}>
-        <div className="h-full flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-2">欢迎使用 PostBoy</h2>
-            <p className="text-sm">选择或创建一个请求开始测试 API</p>
-          </div>
+      <div className="flex-1 overflow-hidden">
+        <MainLayout sidebar={<Sidebar />}>
+          <MainContent />
+        </MainLayout>
+      </div>
+    </div>
+  );
+}
+
+function MainContent() {
+  const { currentRequest } = useRequestStore();
+  const { responseData, isLoading, error } = useResponseStore();
+
+  if (!currentRequest.id) {
+    return (
+      <div className="h-full flex items-center justify-center text-muted-foreground">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">欢迎使用 PostBoy</h2>
+          <p className="text-sm">选择或创建一个请求开始测试 API</p>
         </div>
-      </MainLayout>
-    </>
+      </div>
+    );
+  }
+
+  return (
+    <ResizablePanelGroup direction="vertical">
+      <ResizablePanel defaultSize={50} minSize={30}>
+        <RequestEditor />
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={50} minSize={30}>
+        <ResponseViewer response={responseData} isLoading={isLoading} error={error} />
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
 

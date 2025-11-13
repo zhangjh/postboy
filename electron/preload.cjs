@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on(channel, subscription);
     return () => ipcRenderer.removeListener(channel, subscription);
   },
+  windowControl: (action) => ipcRenderer.send('window-control', action),
 });

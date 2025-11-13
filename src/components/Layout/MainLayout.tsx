@@ -8,12 +8,12 @@ interface MainLayoutProps {
 
 export function MainLayout({ sidebar, children }: MainLayoutProps) {
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       <Header />
       <div className="flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-            <div className="h-full overflow-hidden">{sidebar}</div>
+            {sidebar}
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={80}>
