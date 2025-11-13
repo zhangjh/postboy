@@ -2,6 +2,11 @@
 
 A lightweight cross-platform HTTP client for API testing, built with Electron and React.
 
+## ScreenShot
+<img width="1920" height="1140" alt="image" src="https://github.com/user-attachments/assets/f643e0fa-b5ef-4e5f-af8d-ad05fcc34780" />
+<img width="1920" height="1140" alt="image" src="https://github.com/user-attachments/assets/4117c93c-d759-4bdc-961e-66dad48219f7" />
+
+
 ## Features
 
 - 🚀 Fast and lightweight
