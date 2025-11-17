@@ -14,6 +14,13 @@ function escapeShellArg(arg: string): string {
 export function generateCurl(config: RequestConfig, platform: 'win32' | 'darwin' | 'linux' = 'linux'): string {
   const parts: string[] = ['curl'];
 
+  let url = config.url.trim();
+  if (url && !url.match(/^https?:\/\//i)) {
+    url = 'http://' + url;
+  }
+  const escapedUrl = url.includes(' ') ? `"${url}"` : url;
+  parts.push(escapedUrl);
+
   if (config.method && config.method !== 'GET') {
     parts.push(`-X ${config.method}`);
   }
@@ -29,9 +36,6 @@ export function generateCurl(config: RequestConfig, platform: 'win32' | 'darwin'
     const escapedBody = escapeShellArg(config.body);
     parts.push(`-d "${escapedBody}"`);
   }
-
-  const escapedUrl = config.url.includes(' ') ? `"${config.url}"` : config.url;
-  parts.push(escapedUrl);
 
   let command = parts.join(' ');
 

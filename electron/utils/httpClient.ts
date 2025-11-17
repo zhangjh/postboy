@@ -99,6 +99,11 @@ export async function sendHttpRequest(config: RequestConfig): Promise<ResponseDa
   const startTime = Date.now();
   
   try {
+    let url = config.url.trim();
+    if (url && !url.match(/^https?:\/\//i)) {
+      url = 'http://' + url;
+    }
+    
     const fetchOptions: RequestInit = {
       method: config.method,
       headers: config.headers,
@@ -109,7 +114,7 @@ export async function sendHttpRequest(config: RequestConfig): Promise<ResponseDa
       fetchOptions.body = config.body;
     }
     
-    const response = await fetch(config.url, fetchOptions);
+    const response = await fetch(url, fetchOptions);
     
     const endTime = Date.now();
     const duration = endTime - startTime;

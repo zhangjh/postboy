@@ -55,12 +55,26 @@ export const useRequestStore = create<RequestState>((set, get) => ({
   currentRequest: { ...initialRequest },
 
   setMethod: (method: HttpMethod) => {
-    set((state) => ({
-      currentRequest: {
-        ...state.currentRequest,
-        method,
-      },
-    }));
+    set((state) => {
+      const updates: Partial<CurrentRequest> = { method };
+      
+      // 当切换到POST/PUT/DELETE方法时，如果当前bodyMode是none，自动设置为raw+json
+      if (['POST', 'PUT', 'DELETE'].includes(method) && state.currentRequest.bodyMode === 'none') {
+        updates.bodyMode = 'raw';
+        updates.rawType = 'json';
+      }
+      // 当切换到GET/HEAD/OPTIONS方法时，重置bodyMode为none
+      else if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        updates.bodyMode = 'none';
+      }
+      
+      return {
+        currentRequest: {
+          ...state.currentRequest,
+          ...updates,
+        },
+      };
+    });
   },
 
   setUrl: (url: string) => {
@@ -207,6 +221,34 @@ export const useRequestStore = create<RequestState>((set, get) => ({
     rawType?: 'text' | 'json' | 'xml' | 'html' | 'javascript',
     formData?: FormDataItem[]
   ) => {
+    let finalBodyMode = bodyMode || 'none';
+    let finalRawType = rawType || 'text';
+    let finalBody = body;
+    
+    // 如果是POST/PUT/DELETE方法且有body内容，但bodyMode是none，智能判断
+    if (['POST', 'PUT', 'DELETE'].includes(method) && body && body.trim() && finalBodyMode === 'none') {
+      // 尝试解析为JSON
+      try {
+        const parsed = JSON.parse(body);
+        finalBodyMode = 'raw';
+        finalRawType = 'json';
+        finalBody = JSON.stringify(parsed, null, 2); // 自动格式化
+      } catch {
+        // 不是JSON，设置为raw text
+        finalBodyMode = 'raw';
+        finalRawType = 'text';
+      }
+    }
+    // 如果已经是raw+json模式，且有body内容，尝试格式化
+    else if (finalBodyMode === 'raw' && finalRawType === 'json' && body && body.trim()) {
+      try {
+        const parsed = JSON.parse(body);
+        finalBody = JSON.stringify(parsed, null, 2);
+      } catch {
+        // 格式化失败，保持原样
+      }
+    }
+    
     set({
       currentRequest: {
         id: requestId,
@@ -215,9 +257,9 @@ export const useRequestStore = create<RequestState>((set, get) => ({
         method,
         url,
         headers,
-        body,
-        bodyMode: bodyMode || 'none',
-        rawType: rawType || 'text',
+        body: finalBody,
+        bodyMode: finalBodyMode,
+        rawType: finalRawType,
         formData: formData || [],
       },
     });
@@ -227,7 +269,12 @@ export const useRequestStore = create<RequestState>((set, get) => ({
 
   resetRequest: () => {
     set({
-      currentRequest: { ...initialRequest },
+      currentRequest: { 
+        ...initialRequest,
+        // 新建请求时，如果是POST/PUT/DELETE，默认使用raw+json
+        bodyMode: ['POST', 'PUT', 'DELETE'].includes(initialRequest.method) ? 'raw' : 'none',
+        rawType: ['POST', 'PUT', 'DELETE'].includes(initialRequest.method) ? 'json' : 'text',
+      },
     });
   },
 }));
