@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import Editor from '@monaco-editor/react';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
-import { formatJSON, formatXML } from '../../services/formatService';
+import { formatXML } from '../../services/formatService';
 
 interface ResponseBodyProps {
   data: any;
@@ -14,7 +14,30 @@ type ViewMode = 'formatted' | 'preview';
 export function ResponseBody({ data, contentType }: ResponseBodyProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
   
+  const isJsonData = useMemo(() => {
+    if (typeof data === 'object' && data !== null && data.type !== 'binary') {
+      return true;
+    }
+    if (typeof data === 'string') {
+      const trimmed = data.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
+          (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          JSON.parse(trimmed);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+    }
+    return false;
+  }, [data]);
+  
   const responseType = useMemo(() => {
+    if (isJsonData) {
+      return 'json';
+    }
+    
     const type = contentType.toLowerCase();
     
     if (type.includes('application/json') || type.includes('text/json')) {
@@ -34,15 +57,34 @@ export function ResponseBody({ data, contentType }: ResponseBodyProps) {
     }
     
     return 'text';
-  }, [contentType]);
+  }, [contentType, isJsonData]);
   
   const formattedContent = useMemo(() => {
+    console.log('ResponseBody Debug:', {
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      responseType,
+      contentType,
+      dataPreview: typeof data === 'string' ? data.substring(0, 100) : data
+    });
+    
     if (responseType === 'json') {
-      if (typeof data === 'string') {
-        const result = formatJSON(data);
-        return result.success ? result.formatted! : data;
+      try {
+        if (typeof data === 'string') {
+          const parsed = JSON.parse(data);
+          const formatted = JSON.stringify(parsed, null, 2);
+          console.log('Formatted JSON from string:', formatted.substring(0, 100));
+          return formatted;
+        }
+        if (typeof data === 'object' && data !== null && data.type !== 'binary') {
+          const formatted = JSON.stringify(data, null, 2);
+          console.log('Formatted JSON from object:', formatted.substring(0, 100));
+          return formatted;
+        }
+      } catch (error) {
+        console.error('JSON formatting error:', error);
       }
-      return JSON.stringify(data, null, 2);
+      return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
     }
     
     if (responseType === 'xml' && typeof data === 'string') {
@@ -54,8 +96,12 @@ export function ResponseBody({ data, contentType }: ResponseBodyProps) {
       return data;
     }
     
-    return JSON.stringify(data, null, 2);
-  }, [data, responseType]);
+    if (typeof data === 'object' && data !== null) {
+      return JSON.stringify(data, null, 2);
+    }
+    
+    return String(data);
+  }, [data, responseType, contentType]);
   
   const editorLanguage = useMemo(() => {
     switch (responseType) {
@@ -147,7 +193,10 @@ export function ResponseBody({ data, contentType }: ResponseBodyProps) {
         scrollBeyondLastLine: false,
         fontSize: 14,
         lineNumbers: 'on',
-        wordWrap: 'on',
+        wordWrap: 'off',
+        automaticLayout: true,
+        formatOnPaste: true,
+        formatOnType: true,
       }}
       theme="vs-light"
     />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { X } from 'lucide-react';
@@ -15,16 +15,26 @@ interface HeadersEditorProps {
 }
 
 export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) {
-  const [rows, setRows] = useState<HeaderRow[]>([]);
+  const [rows, setRows] = useState<HeaderRow[]>([{ key: '', value: '', id: `header-new-${Date.now()}` }]);
+  const isInternalUpdate = useRef(false);
 
   useEffect(() => {
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
+
     const headerRows: HeaderRow[] = Object.entries(headers).map(([key, value], index) => ({
       key,
       value,
       id: `header-${index}-${key}`,
     }));
     
-    headerRows.push({ key: '', value: '', id: `header-new-${Date.now()}` });
+    const hasEmptyRow = headerRows.some(row => !row.key.trim() && !row.value.trim());
+    if (!hasEmptyRow) {
+      headerRows.push({ key: '', value: '', id: `header-new-${Date.now()}` });
+    }
+    
     setRows(headerRows);
   }, [headers]);
 
@@ -35,6 +45,7 @@ export function HeadersEditor({ headers, onHeadersChange }: HeadersEditorProps) 
         newHeaders[row.key.trim()] = row.value;
       }
     });
+    isInternalUpdate.current = true;
     onHeadersChange(newHeaders);
   };
 
